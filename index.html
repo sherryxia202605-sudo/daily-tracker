@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>吃 · 练 · 写 | 断奶收尾期每日看板</title>
+<style>
+  :root{
+    --bg:#F2F5F4; --ink:#1F3038; --ink2:#5C6E74; --line:#DCE4E1; --card:#FFFFFF;
+    --eat:#E08A4E; --eat-soft:#FBEFE4;
+    --move:#3E9C85; --move-soft:#E4F2EE;
+    --write:#5B6ABF; --write-soft:#E9EBF8;
+    --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+    font-size:15px; line-height:1.6; padding:16px 14px 60px;
+  }
+  .wrap{max-width:520px; margin:0 auto;}
+  h1,h2,.serif{font-family:"Noto Serif SC","Songti SC","STSong",serif;}
+  header{padding:6px 4px 14px;}
+  .date-line{font-size:13px; color:var(--ink2); letter-spacing:.05em;}
+  h1{font-size:26px; font-weight:700; margin:2px 0 8px;}
+  .badges{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .badge{
+    font-size:12px; padding:3px 10px; border-radius:999px;
+    background:var(--card); border:1px solid var(--line); color:var(--ink2);
+  }
+  .badge b{color:var(--ink);}
+  .badge.edit{cursor:pointer;}
+  /* 今日三格 signature */
+  .tri{
+    display:flex; height:14px; border-radius:999px; overflow:hidden;
+    border:1px solid var(--line); background:var(--card); margin:14px 0 4px;
+  }
+  .tri .seg{flex:1; position:relative; background:transparent;}
+  .tri .seg+.seg{border-left:1px solid var(--line);}
+  .tri .fill{position:absolute; left:0; top:0; bottom:0; width:0%; transition:width .5s ease;}
+  .seg.eat .fill{background:var(--eat);} .seg.move .fill{background:var(--move);} .seg.write .fill{background:var(--write);}
+  .tri-labels{display:flex; font-size:12px; color:var(--ink2); margin-bottom:6px;}
+  .tri-labels span{flex:1; text-align:center;}
+  .quote{font-size:13px; color:var(--ink2); text-align:center; margin:10px 0 4px; font-style:normal;}
+
+  section.card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 16px 14px; margin-top:14px;
+  }
+  .card-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;}
+  .card-head h2{font-size:18px;}
+  .card-head .tag{font-size:12px; padding:2px 10px; border-radius:999px;}
+  .card.eat .tag{background:var(--eat-soft); color:var(--eat);}
+  .card.move .tag{background:var(--move-soft); color:var(--move);}
+  .card.write .tag{background:var(--write-soft); color:var(--write);}
+  .card.eat h2{color:var(--eat);} .card.move h2{color:var(--move);} .card.write h2{color:var(--write);}
+
+  .check{display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px dashed var(--line); cursor:pointer; user-select:none;}
+  .check:last-of-type{border-bottom:none;}
+  .box{
+    width:22px; height:22px; border-radius:7px; border:1.5px solid var(--line);
+    flex:none; display:flex; align-items:center; justify-content:center;
+    font-size:14px; color:#fff; background:#fff; transition:all .15s;
+  }
+  .check.on .box{border-color:transparent;}
+  .card.eat .check.on .box{background:var(--eat);}
+  .card.move .check.on .box{background:var(--move);}
+  .card.write .check.on .box{background:var(--write);}
+  .check .t{flex:1;}
+  .check .sub{display:block; font-size:12px; color:var(--ink2);}
+  .check.on .t{color:var(--ink2); }
+
+  .water{display:flex; gap:6px; margin:10px 0 4px; flex-wrap:wrap;}
+  .cup{
+    width:34px; height:40px; border:1.5px solid var(--line); border-radius:6px 6px 10px 10px;
+    display:flex; align-items:flex-end; justify-content:center; font-size:11px; color:var(--ink2);
+    cursor:pointer; background:#fff; padding-bottom:3px; transition:all .15s;
+  }
+  .cup.on{background:var(--eat-soft); border-color:var(--eat); color:var(--eat);}
+  .hint{font-size:12px; color:var(--ink2); margin-top:8px;}
+
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  input[type="number"], input[type="date"]{
+    border:1.5px solid var(--line); border-radius:10px; padding:7px 10px; font-size:15px;
+    color:var(--ink); background:#fff; width:110px; font-family:inherit;
+  }
+  button{
+    font-family:inherit; font-size:14px; border:none; border-radius:10px;
+    padding:8px 16px; cursor:pointer; color:#fff; transition:opacity .15s;
+  }
+  button:active{opacity:.75;}
+  .btn-eat{background:var(--eat);} .btn-move{background:var(--move);} .btn-write{background:var(--write);}
+  .btn-ghost{background:#fff; color:var(--ink2); border:1.5px solid var(--line);}
+
+  /* 番茄钟 */
+  .pomo{
+    display:flex; flex-direction:column; align-items:center; padding:10px 0 6px;
+  }
+  .pomo-ring{position:relative; width:170px; height:170px;}
+  .pomo-ring svg{transform:rotate(-90deg);}
+  .pomo-time{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .pomo-time .num{font-size:36px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:.02em;}
+  .pomo-time .mode{font-size:12px; color:var(--ink2);}
+  .pomo-btns{display:flex; gap:10px; margin-top:12px;}
+  .pomo-count{font-size:13px; color:var(--ink2); margin-top:10px;}
+  .pomo-count b{color:var(--write); font-size:16px;}
+  .tomato{font-size:15px;}
+
+  .stat-line{display:flex; justify-content:space-between; font-size:13px; color:var(--ink2); padding:6px 2px;}
+  .stat-line b{color:var(--ink); font-size:15px;}
+  .spark{width:100%; height:64px; margin-top:6px;}
+
+  .plan-title{
+    font-size:15px; font-weight:600; color:var(--ink);
+    padding:8px 10px; background:var(--move-soft); border-radius:10px; margin-bottom:6px;
+  }
+  .plan-title small{display:block; font-weight:400; font-size:12px; color:var(--ink2);}
+  .menu-box{margin-top:12px; border-top:1px dashed var(--line); padding-top:10px;}
+  .menu-box .mt{font-size:13px; color:var(--ink2); margin-bottom:4px;}
+  .menu-line{display:flex; gap:8px; padding:5px 2px; font-size:14px; align-items:baseline;}
+  .menu-line .ml{flex:none; width:34px; text-align:center; font-size:12px; border-radius:6px;
+    background:var(--eat-soft); color:var(--eat); padding:1px 0;}
+  .week-row{display:flex; gap:8px; padding:5px 2px; font-size:13px; border-bottom:1px dashed var(--line);}
+  .week-row:last-child{border-bottom:none;}
+  .week-row .wd{flex:none; width:38px; color:var(--move); font-weight:600;}
+  .week-row.today .wd::after{content:" ●";}
+  details{margin-top:10px; font-size:13px; color:var(--ink2);}
+  details summary{cursor:pointer; color:var(--ink2); font-size:13px;}
+  details p{margin-top:6px;}
+  .footer{
+    text-align:center; font-size:12px; color:var(--ink2); margin-top:22px;
+  }
+  .hist-row{display:flex; align-items:center; gap:10px; padding:8px 2px; border-bottom:1px dashed var(--line); font-size:13px;}
+  .hist-row:last-child{border-bottom:none;}
+  .hist-row .hd{flex:none; width:74px; color:var(--ink2);}
+  .hist-row .hd b{color:var(--ink); font-weight:600;}
+  .dots{display:flex; gap:5px; flex:none;}
+  .dot{width:12px; height:12px; border-radius:50%; border:1.5px solid var(--line); background:#fff;}
+  .dot.eat.on{background:var(--eat); border-color:var(--eat);}
+  .dot.move.on{background:var(--move); border-color:var(--move);}
+  .dot.write.on{background:var(--write); border-color:var(--write);}
+  .hist-row .hs{color:var(--ink2); margin-left:auto; text-align:right; font-variant-numeric:tabular-nums;}
+  .toast{
+    position:fixed; left:50%; bottom:30px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; font-size:13px; padding:8px 18px; border-radius:999px;
+    opacity:0; pointer-events:none; transition:all .3s;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date-line" id="dateLine">—</div>
+    <h1>吃 · 练 · 写</h1>
+    <div class="badges">
+      <span class="badge">🍼 断奶第 <b id="weanDay">10</b> 天</span>
+      <span class="badge edit" id="editWean">修改开始日期</span>
+      <span class="badge">👶 宝宝 15 个月</span>
+    </div>
+    <div class="tri" aria-label="今日三项完成进度">
+      <div class="seg eat"><div class="fill" id="fillEat"></div></div>
+      <div class="seg move"><div class="fill" id="fillMove"></div></div>
+      <div class="seg write"><div class="fill" id="fillWrite"></div></div>
+    </div>
+    <div class="tri-labels"><span>吃</span><span>练</span><span>写</span></div>
+    <div class="quote serif" id="quote"></div>
+  </header>
+
+  <!-- 吃 -->
+  <section class="card eat">
+    <div class="card-head"><h2>吃 · 稳住结构</h2><span class="tag">不节食,只调结构</span></div>
+    <div id="eatChecks"></div>
+    <div class="menu-box">
+      <div class="mt">今日推荐食谱 · <span id="menuDay"></span></div>
+      <div id="menuLines"></div>
+    </div>
+    <details>
+      <summary>一周食谱总表</summary>
+      <div id="weekMenu" style="margin-top:6px;"></div>
+    </details>
+    <details>
+      <summary>备餐技巧(省时间就靠这个)</summary>
+      <p>① 周末花 40 分钟批量备餐:炖一锅番茄土豆鸡腿或卤鸡胸分 3–4 盒冷藏,工作日晚餐直接加热配菜。② 蔬菜买回来当天洗切分盒,炒菜从"洗切炒"变成"倒进锅"。③ 娃的那份同锅先盛:调味前盛出娃的,再给大人加盐,一顿饭做一次。④ 鸡蛋、酸奶、坚果、水果常备,饿了先从这四样里选,不给零食留决策空间。⑤ 上班日午餐食堂策略:先拿蛋白(蒸鱼/卤肉/鸡腿去皮),再拿两份蔬菜,主食选杂粮,汤选清汤——顺序对了量就对了。</p>
+    </details>
+    <div style="margin-top:12px;">
+      <div style="font-size:13px; color:var(--ink2);">喝水打卡(目标 6–8 杯)</div>
+      <div class="water" id="waterCups"></div>
+    </div>
+    <div style="margin-top:14px; border-top:1px dashed var(--line); padding-top:12px;">
+      <div class="row">
+        <span style="font-size:13px; color:var(--ink2);">每周称重一次:</span>
+        <input type="number" id="weightInput" step="0.1" min="30" max="150" placeholder="kg">
+        <button class="btn-eat" id="saveWeight">记录</button>
+      </div>
+      <div class="stat-line"><span>最近一次</span><b id="lastWeight">—</b></div>
+      <div class="stat-line"><span>较上次变化</span><b id="weightDelta">—</b></div>
+      <svg class="spark" id="weightSpark" viewBox="0 0 300 64" preserveAspectRatio="none"></svg>
+    </div>
+    <details>
+      <summary>断奶期饮食小贴士</summary>
+      <p>断奶后 2–4 周体内激素还在调整,体重先"稳"再"降"是正常节奏,别被前两周的数字影响心态。重点抓:每餐有蛋白质(蛋/奶/肉/豆)、主食别省但减精制糖、每周体重降 0.25–0.5kg 就是健康速度。奶量在收尾,如出现明显胀奶不适,冷敷+按需少量排空即可,不必刻意大量限水。</p>
+    </details>
+  </section>
+
+  <!-- 练 -->
+  <section class="card move">
+    <div class="card-head"><h2>练 · 今日方案</h2><span class="tag" id="phaseTag">工作期</span></div>
+    <div class="plan-title" id="planTitle"></div>
+    <div id="moveChecks"></div>
+    <div class="hint" id="planNote"></div>
+    <details>
+      <summary>本周训练表</summary>
+      <div id="weekPlan" style="margin-top:6px;"></div>
+    </details>
+    <details>
+      <summary>使用原则</summary>
+      <p>勾掉当天任意一个动作,进度条就算完成——"做了一点"永远好过"完美地没做"。所有力量动作用自重或弹力带,居家 2㎡ 空间即可。如某天完全没窗口,做最后那条保底拉伸也算数。动作顺序和替换你自己拿主意,你比我专业。</p>
+    </details>
+  </section>
+
+  <!-- 写 -->
+  <section class="card write">
+    <div class="card-head"><h2>写 · 番茄推进</h2><span class="tag">每天 2–4 个番茄</span></div>
+    <div class="pomo">
+      <div class="pomo-ring">
+        <svg width="170" height="170" viewBox="0 0 170 170">
+          <circle cx="85" cy="85" r="76" fill="none" stroke="var(--write-soft)" stroke-width="10"/>
+          <circle id="ringArc" cx="85" cy="85" r="76" fill="none" stroke="var(--write)" stroke-width="10"
+                  stroke-linecap="round" stroke-dasharray="477.5" stroke-dashoffset="0"/>
+        </svg>
+        <div class="pomo-time">
+          <div class="num" id="pomoTime">25:00</div>
+          <div class="mode" id="pomoMode">专注</div>
+        </div>
+      </div>
+      <div class="pomo-btns">
+        <button class="btn-write" id="pomoStart">开始</button>
+        <button class="btn-ghost" id="pomoReset">重置</button>
+      </div>
+      <div class="pomo-count">今日已完成 <b id="pomoCount">0</b> 个番茄 <span class="tomato" id="pomoIcons"></span></div>
+    </div>
+    <div style="border-top:1px dashed var(--line); padding-top:12px; margin-top:8px;">
+      <div class="row">
+        <span style="font-size:13px; color:var(--ink2);">今日论文字数:</span>
+        <input type="number" id="wordsInput" step="50" min="0" placeholder="字数">
+        <button class="btn-write" id="saveWords">记录</button>
+      </div>
+      <div class="stat-line"><span>今日字数</span><b id="wordsToday">0</b></div>
+      <div class="stat-line"><span>近 7 天累计</span><b id="wordsWeek">0</b></div>
+    </div>
+    <details>
+      <summary>带娃写论文的番茄用法</summary>
+      <p>不求整块时间:娃睡后 2 个番茄、门诊间隙 1 个,一天 3–4 个番茄 ≈ 稳定产出 500–800 字或改一节。番茄期间只做一件事(写/改/查文献选其一),铃响必休息 5 分钟——起来倒水正好凑喝水打卡。</p>
+    </details>
+  </section>
+
+  <!-- 回顾 -->
+  <section class="card">
+    <div class="card-head"><h2 class="serif" style="font-size:18px;">回顾 · 近 7 天</h2>
+      <span class="tag" style="background:var(--bg); color:var(--ink2);">🍊吃 🟢练 🔵写</span></div>
+    <div id="histRows"></div>
+    <div class="hint">彩点=当天该项有打卡(练=完成≥1个动作;吃=打卡≥3项;写=有番茄或字数)。看趋势别看单日,一周里亮 5 天就很好。</div>
+  </section>
+
+  <div class="footer">数据自动保存 · 每天打开自动切换到当天</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  // ---------- 存储封装 ----------
+  // 优先级:Claude 内置存储 > 浏览器本地存储(下载后用手机/电脑浏览器打开也能保存) > 内存兜底
+  const mem = {};
+  let hasLocal = false;
+  try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); hasLocal = true; }catch(e){}
+  const NS = 'clx:'; // localStorage 前缀,避免和其他页面冲突
+  async function sGet(key){
+    try{
+      if(window.storage){ const r = await window.storage.get(key); return r ? JSON.parse(r.value) : null; }
+      if(hasLocal){ const v = localStorage.getItem(NS+key); return v ? JSON.parse(v) : null; }
+      return key in mem ? mem[key] : null;
+    }catch(e){ return null; }
+  }
+  async function sSet(key,val){
+    try{
+      if(window.storage){ await window.storage.set(key, JSON.stringify(val)); return; }
+      if(hasLocal){ localStorage.setItem(NS+key, JSON.stringify(val)); return; }
+      mem[key]=val;
+    }catch(e){ /* 忽略写入失败 */ }
+  }
+
+  // ---------- 日期工具 ----------
+  const pad = n => String(n).padStart(2,'0');
+  const now = new Date();
+  const todayKey = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  const weekdays = ['日','一','二','三','四','五','六'];
+  document.getElementById('dateLine').textContent =
+    now.getFullYear()+' 年 '+(now.getMonth()+1)+' 月 '+now.getDate()+' 日 · 星期'+weekdays[now.getDay()];
+
+  const quotes = [
+    '不求完美的一天,只求三格都有一点颜色。',
+    '论文是每天写出来的,不是熬夜赶出来的。',
+    '断奶收尾期,对身体温柔一点。',
+    '一个番茄,也在往前走。',
+    '妈妈状态好,全家节奏才稳。',
+    '今天的 500 字,就是答辩时的底气。'
+  ];
+  document.getElementById('quote').textContent = quotes[(now.getDate()) % quotes.length];
+
+  // ---------- 数据结构 ----------
+  const EAT_ITEMS = [
+    {id:'b',   t:'早餐吃了', sub:'有蛋白质:蛋 / 奶 / 豆浆'},
+    {id:'l',   t:'午餐吃了', sub:'一掌蛋白 + 一拳主食 + 蔬菜过半盘'},
+    {id:'d',   t:'晚餐清淡', sub:'比午餐少一点,睡前 3 小时吃完'},
+    {id:'ns',  t:'没有情绪性加餐', sub:'想吃甜的先喝水,等 10 分钟'},
+    {id:'fr',  t:'水果 / 坚果一份', sub:'替代零食,不叠加'}
+  ];
+  // ---------- 训练计划(按阶段+星期自动切换) ----------
+  // 暑假区间:7.20 – 8.31(9.1 开学恢复工作期)
+  const SUMMER_START='2026-07-20', SUMMER_END='2026-09-01';
+  const isSummer = todayKey >= SUMMER_START && todayKey < SUMMER_END;
+
+  // 工作期:门诊+上班,主打午晚碎片;周五门诊日只做保底
+  const WORK_PLAN = [
+    {name:'主动恢复日', time:'约30分钟', ex:[
+      {t:'全家散步 / 遛娃 30 分钟', sub:'强度=能正常聊天'},
+      {t:'胸大肌门框拉伸 30秒×2/侧', sub:'对冲一周伏案'},
+      {t:'髋屈肌跪姿拉伸 30秒×2/侧', sub:'骨盆中立,别塌腰'},
+      {t:'腘绳肌拉伸 30秒×2/侧', sub:'呼气加深'}
+    ]},
+    {name:'肩背弹力带日', time:'约12分钟', ex:[
+      {t:'弹力带面拉 3组×15次', sub:'肩胛后缩下沉,慢放'},
+      {t:'坐姿弹力带划船 3组×12次', sub:'肘贴身,顶峰停1秒'},
+      {t:'弹力带肩外旋 2组×15次/侧', sub:'肘屈90°贴体侧,腋下夹卷毛巾防代偿,前臂慢速向外转'},
+      {t:'俯身 W–Y 2组×10次', sub:'下斜方主导,颈部放松'}
+    ]},
+    {name:'有氧日 · 推娃快走', time:'25分钟', ex:[
+      {t:'推娃快走 25 分钟', sub:'中段插 5 组「快1分+慢1分」'},
+      {t:'走后小腿+股四头拉伸 3 分钟', sub:'各30秒/侧'}
+    ]},
+    {name:'核心 + 骨盆底日', time:'约12分钟', ex:[
+      {t:'死虫式 3组×10次/侧', sub:'呼气出腿,腰贴地'},
+      {t:'臀桥 + 凯格尔 3组×12次', sub:'顶端收缩停3秒'},
+      {t:'鸟狗式 2组×10次/侧', sub:'骨盆不晃,慢'},
+      {t:'侧桥 2组×20–30秒/侧', sub:'可屈膝降阶'}
+    ]},
+    {name:'下肢日', time:'约12分钟', ex:[
+      {t:'靠墙静蹲 3组×40秒', sub:'膝约90°,组间1分钟'},
+      {t:'后撤箭步蹲 3组×10次/侧', sub:'躯干直立'},
+      {t:'单腿提踵 3组×12次/侧', sub:'扶墙,全幅慢做'},
+      {t:'蚌式 2组×15次/侧', sub:'骨盆固定,臀中肌发力'}
+    ]},
+    {name:'门诊日 · 保底', time:'5分钟+步数', ex:[
+      {t:'碎片拉伸 5 分钟', sub:'颈侧屈、上斜方、胸椎旋转、门框胸肌各30秒'},
+      {t:'今日步数 ≥ 7000', sub:'通勤+院内步行凑'}
+    ]},
+    {name:'全身循环日', time:'约15分钟', ex:[
+      {t:'徒手深蹲 12次 ×3轮', sub:'四个动作连做为1轮,轮间休1分'},
+      {t:'跪姿俯卧撑 8–10次 ×3轮', sub:'核心收紧,身体一条线'},
+      {t:'弹力带划船 12次 ×3轮', sub:''},
+      {t:'死虫式 8次/侧 ×3轮', sub:''}
+    ]}
+  ];
+
+  // 暑假期(7.20–8.31):无门诊,全天带娃+论文
+  // 窗口:早晨娃醒前或午睡前段15分钟=力量;傍晚遛娃=有氧;老人搭手的整块时间优先留给论文
+  const SUMMER_PLAN = [
+    {name:'休息日', time:'随意', ex:[
+      {t:'全家外出活动 / 散步', sub:'不算训练,算生活'},
+      {t:'全身拉伸 10 分钟', sub:'胸、髋、腘绳肌、小腿'}
+    ]},
+    {name:'下肢 + 臀日', time:'约15分钟', ex:[
+      {t:'徒手深蹲 3组×12次', sub:'可抱娃负重,娃当哑铃'},
+      {t:'后撤箭步蹲 3组×10次/侧', sub:''},
+      {t:'臀桥 3组×15次', sub:'顶端停2秒'},
+      {t:'提踵 3组×15次', sub:''}
+    ]},
+    {name:'有氧日 · 傍晚遛娃', time:'30分钟', ex:[
+      {t:'傍晚推娃快走 30 分钟', sub:'避开正午高温,带水'},
+      {t:'走后拉伸 3 分钟', sub:'小腿+股四头'}
+    ]},
+    {name:'肩背弹力带日', time:'约15分钟', ex:[
+      {t:'弹力带面拉 3组×15次', sub:'肩胛后缩下沉'},
+      {t:'坐姿划船 3组×12次', sub:''},
+      {t:'弹力带肩外旋 2组×15次/侧', sub:'肘贴体侧夹毛巾,慢速外旋'},
+      {t:'俯身 W–Y 2组×10次', sub:''},
+      {t:'俯身飞鸟 2组×12次', sub:'轻阻力,控制离心'}
+    ]},
+    {name:'有氧日 · 灵活安排', time:'30分钟', ex:[
+      {t:'推娃快走 30 分钟', sub:'或换成亲子游泳/公园暴走'},
+      {t:'碎片拉伸 5 分钟', sub:''}
+    ]},
+    {name:'核心 + 骨盆底日', time:'约15分钟', ex:[
+      {t:'死虫式 3组×10次/侧', sub:'呼气出腿'},
+      {t:'鸟狗式 3组×10次/侧', sub:''},
+      {t:'臀桥 + 凯格尔 3组×12次', sub:'顶端停3秒'},
+      {t:'侧桥 2组×30秒/侧', sub:''},
+      {t:'猫驼式 10 次收尾', sub:'配合呼吸放松'}
+    ]},
+    {name:'全身循环日', time:'约18分钟', ex:[
+      {t:'徒手深蹲 12次 ×3–4轮', sub:'五个动作连做为1轮,轮间休1分'},
+      {t:'跪姿俯卧撑 8–10次 ×3–4轮', sub:''},
+      {t:'弹力带划船 12次 ×3–4轮', sub:''},
+      {t:'臀桥 15次 ×3–4轮', sub:''},
+      {t:'死虫式 8次/侧 ×3–4轮', sub:''}
+    ]}
+  ];
+
+  const FALLBACK = {t:'保底:碎片拉伸 5 分钟', sub:'今天实在没窗口,勾这条也算完成'};
+  const PLAN = isSummer ? SUMMER_PLAN : WORK_PLAN;
+  const todayPlan = PLAN[now.getDay()];
+  const MOVE_ITEMS = todayPlan.ex.map((e,i)=>({id:'e'+i, t:e.t, sub:e.sub}))
+                      .concat([{id:'fb', t:FALLBACK.t, sub:FALLBACK.sub}]);
+
+  // ---------- 一周食谱(索引 0=周日) ----------
+  const MENU = [
+    {b:'番茄鸡蛋荞麦面(蛋2个)', l:'清蒸鲈鱼 + 杂粮饭 + 蒜蓉西兰花(娃可共食)', d:'虾仁豆腐蔬菜汤 + 半碗饭', s:'酸奶 + 蓝莓'},
+    {b:'水煮蛋 2 个 + 全麦面包 1 片 + 牛奶', l:'鸡胸肉杂粮饭碗(备餐卤鸡胸 + 焯拌蔬菜)', d:'番茄龙利鱼汤 + 玉米半根', s:'一小把原味坚果(约15g)'},
+    {b:'燕麦牛奶粥 + 鸡蛋 1 个', l:'里脊肉片炒西兰花 + 糙米饭', d:'香菇鸡肉滑粥 + 凉拌菠菜', s:'苹果 1 个'},
+    {b:'蔬菜鸡蛋饼(蛋2个+胡萝卜丝)+ 无糖豆浆', l:'食堂:蒸鱼或卤瘦肉 + 两份蔬菜 + 杂粮饭', d:'虾仁蒸蛋(娃可共食)+ 半碗饭 + 炒青菜', s:'无糖酸奶 1 杯'},
+    {b:'全麦三明治(蛋+生菜+少量芝士)+ 牛奶', l:'香煎三文鱼 + 米饭 + 时蔬(鱼多做娃分一块)', d:'冬瓜鸡肉丸子汤 + 半碗饭', s:'圣女果一小碗'},
+    {b:'蒸紫薯 + 鸡蛋 1 个 + 豆浆(门诊日快手)', l:'食堂:先蛋白后蔬菜,主食选杂粮', d:'番茄土豆炖鸡腿(备餐加热)+ 少量面', s:'坚果 15g 或 1 个梨'},
+    {b:'鲜肉小馄饨 + 烫青菜', l:'白灼虾 + 杂粮饭 + 上汤时蔬', d:'清汤涮锅:瘦肉片 + 豆腐 + 大量蔬菜(全家一锅)', s:'酸奶 + 应季水果'}
+  ];
+  function renderMenu(){
+    const m = MENU[now.getDay()];
+    document.getElementById('menuDay').textContent = '星期'+weekdays[now.getDay()];
+    document.getElementById('menuLines').innerHTML =
+      '<div class="menu-line"><span class="ml">早</span><span>'+m.b+'</span></div>'+
+      '<div class="menu-line"><span class="ml">午</span><span>'+m.l+'</span></div>'+
+      '<div class="menu-line"><span class="ml">晚</span><span>'+m.d+'</span></div>'+
+      '<div class="menu-line"><span class="ml">加</span><span>'+m.s+'</span></div>';
+    const order=[1,2,3,4,5,6,0];
+    document.getElementById('weekMenu').innerHTML = order.map(i=>
+      '<div class="week-row'+(i===now.getDay()?' today':'')+'">'+
+      '<span class="wd" style="color:var(--eat);">周'+weekdays[i]+'</span>'+
+      '<span>早:'+MENU[i].b+'<br>午:'+MENU[i].l+'<br>晚:'+MENU[i].d+'</span></div>'
+    ).join('');
+  }
+
+  function renderMoveHead(){
+    document.getElementById('phaseTag').textContent = isSummer ? '暑假期 7.20–8.31' : '工作期';
+    document.getElementById('planTitle').innerHTML =
+      '星期'+weekdays[now.getDay()]+' · '+todayPlan.name+
+      '<small>预计 '+todayPlan.time+'</small>';
+    document.getElementById('planNote').textContent = isSummer
+      ? '暑假窗口:早晨娃醒前或午睡前段 15 分钟做力量;傍晚遛娃当有氧;老人搭手的整块时间优先留给论文番茄。'
+      : '上班日抓午晚碎片,门诊日(默认周五)只做保底;如你的门诊不在周五,点开「本周训练表」自己对调即可。';
+    const wp = document.getElementById('weekPlan');
+    const order = [1,2,3,4,5,6,0]; // 周一开头展示
+    wp.innerHTML = order.map(i=>
+      '<div class="week-row'+(i===now.getDay()?' today':'')+'">'+
+      '<span class="wd">周'+weekdays[i]+'</span><span>'+PLAN[i].name+' · '+PLAN[i].time+'</span></div>'
+    ).join('');
+  }
+
+  const blankDay = () => ({eat:{}, move:{}, water:0, pomos:0, words:0});
+  let day = blankDay();
+  let weights = [];   // [{d:'YYYY-MM-DD', kg:Number}]
+  let settings = {weanStart:null};
+
+  const dayKey = 'day:'+todayKey;
+  const saveDay = () => sSet(dayKey, day);
+
+  // ---------- 渲染:打卡列表 ----------
+  function renderChecks(containerId, items, group){
+    const box = document.getElementById(containerId);
+    box.innerHTML = '';
+    items.forEach(it=>{
+      const div = document.createElement('div');
+      div.className = 'check' + (day[group][it.id] ? ' on' : '');
+      div.innerHTML = '<div class="box">'+(day[group][it.id]?'✓':'')+'</div>'+
+        '<div class="t">'+it.t+'<span class="sub">'+it.sub+'</span></div>';
+      div.onclick = ()=>{
+        day[group][it.id] = !day[group][it.id];
+        saveDay(); renderChecks(containerId, items, group); renderTri();
+      };
+      box.appendChild(div);
+    });
+  }
+
+  // ---------- 渲染:水杯 ----------
+  function renderWater(){
+    const box = document.getElementById('waterCups');
+    box.innerHTML = '';
+    for(let i=1;i<=8;i++){
+      const c = document.createElement('div');
+      c.className = 'cup' + (i<=day.water ? ' on' : '');
+      c.textContent = i;
+      c.onclick = ()=>{
+        day.water = (day.water===i) ? i-1 : i;
+        saveDay(); renderWater(); renderTri();
+      };
+      box.appendChild(c);
+    }
+  }
+
+  // ---------- 渲染:三格进度 ----------
+  function frac(obj, total){ return Math.min(Object.values(obj).filter(Boolean).length/total, 1); }
+  function renderTri(){
+    const eatDone = Object.values(day.eat).filter(Boolean).length + (day.water>=6?1:0);
+    const eatFrac = Math.min(eatDone/6,1);
+    const moveFrac = Math.min(Object.values(day.move).filter(Boolean).length/1,1); // 完成1项即满格
+    const writeFrac = Math.min((day.pomos + (day.words>0?1:0))/3,1);
+    document.getElementById('fillEat').style.width  = (eatFrac*100)+'%';
+    document.getElementById('fillMove').style.width = (moveFrac*100)+'%';
+    document.getElementById('fillWrite').style.width= (writeFrac*100)+'%';
+    clearTimeout(renderTri._h); renderTri._h = setTimeout(renderHistory, 400);
+  }
+
+  // ---------- 断奶天数 ----------
+  function renderWean(){
+    if(!settings.weanStart){
+      const d = new Date(now); d.setDate(d.getDate()-9); // 默认今天是第10天
+      settings.weanStart = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+      sSet('settings', settings);
+    }
+    const start = new Date(settings.weanStart+'T00:00:00');
+    const diff = Math.floor((new Date(todayKey+'T00:00:00') - start)/86400000)+1;
+    document.getElementById('weanDay').textContent = diff>0 ? diff : 1;
+  }
+  document.getElementById('editWean').onclick = ()=>{
+    const v = prompt('断奶开始日期(YYYY-MM-DD):', settings.weanStart||'');
+    if(v && /^\d{4}-\d{2}-\d{2}$/.test(v)){ settings.weanStart=v; sSet('settings',settings); renderWean(); toast('已更新'); }
+  };
+
+  // ---------- 体重 ----------
+  function renderWeight(){
+    const last = weights[weights.length-1];
+    const prev = weights[weights.length-2];
+    document.getElementById('lastWeight').textContent = last ? last.kg.toFixed(1)+' kg('+last.d.slice(5)+')' : '—';
+    let deltaTxt='—';
+    if(last && prev){
+      const d = last.kg - prev.kg;
+      deltaTxt = (d>0?'+':'')+d.toFixed(1)+' kg';
+    }
+    document.getElementById('weightDelta').textContent = deltaTxt;
+    // sparkline
+    const svg = document.getElementById('weightSpark');
+    svg.innerHTML='';
+    const pts = weights.slice(-10);
+    if(pts.length>=2){
+      const kgs = pts.map(p=>p.kg);
+      const min = Math.min(...kgs)-0.3, max = Math.max(...kgs)+0.3;
+      const W=300,H=64,P=8;
+      const xy = pts.map((p,i)=>[
+        P + i*(W-2*P)/(pts.length-1),
+        H-P - (p.kg-min)/(max-min)*(H-2*P)
+      ]);
+      const path = xy.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+      svg.innerHTML =
+        '<path d="'+path+'" fill="none" stroke="var(--eat)" stroke-width="2"/>' +
+        xy.map(p=>'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3" fill="var(--eat)"/>').join('');
+    }
+  }
+  document.getElementById('saveWeight').onclick = async ()=>{
+    const v = parseFloat(document.getElementById('weightInput').value);
+    if(!v || v<30 || v>150){ toast('请输入合理体重'); return; }
+    const i = weights.findIndex(w=>w.d===todayKey);
+    if(i>=0) weights[i].kg=v; else weights.push({d:todayKey,kg:v});
+    weights.sort((a,b)=>a.d<b.d?-1:1);
+    await sSet('weights', weights);
+    document.getElementById('weightInput').value='';
+    renderWeight(); toast('体重已记录');
+  };
+
+  // ---------- 字数 ----------
+  async function renderWords(){
+    document.getElementById('wordsToday').textContent = day.words||0;
+    let total = day.words||0;
+    for(let i=1;i<7;i++){
+      const d = new Date(now); d.setDate(d.getDate()-i);
+      const k = 'day:'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+      const rec = await sGet(k);
+      if(rec && rec.words) total += rec.words;
+    }
+    document.getElementById('wordsWeek').textContent = total;
+  }
+  document.getElementById('saveWords').onclick = ()=>{
+    const v = parseInt(document.getElementById('wordsInput').value,10);
+    if(isNaN(v)||v<0){ toast('请输入字数'); return; }
+    day.words = v; saveDay();
+    document.getElementById('wordsInput').value='';
+    renderWords(); renderTri(); toast('字数已记录');
+  };
+
+  // ---------- 番茄钟 ----------
+  const WORK=25*60, BREAK=5*60, CIRC=477.5;
+  let mode='work', remain=WORK, timer=null;
+  const $t=document.getElementById('pomoTime'), $m=document.getElementById('pomoMode'),
+        $arc=document.getElementById('ringArc'), $btn=document.getElementById('pomoStart');
+  function drawPomo(){
+    const total = mode==='work'?WORK:BREAK;
+    $t.textContent = pad(Math.floor(remain/60))+':'+pad(remain%60);
+    $m.textContent = mode==='work'?'专注':'休息';
+    $arc.style.strokeDashoffset = CIRC*(1-remain/total);
+    $arc.style.stroke = mode==='work' ? 'var(--write)' : 'var(--move)';
+  }
+  function renderPomoCount(){
+    document.getElementById('pomoCount').textContent = day.pomos||0;
+    document.getElementById('pomoIcons').textContent = '🍅'.repeat(Math.min(day.pomos||0,8));
+  }
+  function tick(){
+    remain--;
+    if(remain<=0){
+      clearInterval(timer); timer=null; $btn.textContent='开始';
+      if(mode==='work'){
+        day.pomos=(day.pomos||0)+1; saveDay(); renderPomoCount(); renderTri();
+        toast('🍅 完成一个番茄!休息 5 分钟');
+        mode='break'; remain=BREAK;
+      }else{
+        toast('休息结束,开始下一个?');
+        mode='work'; remain=WORK;
+      }
+    }
+    drawPomo();
+  }
+  $btn.onclick = ()=>{
+    if(timer){ clearInterval(timer); timer=null; $btn.textContent='继续'; }
+    else{ timer=setInterval(tick,1000); $btn.textContent='暂停'; }
+  };
+  document.getElementById('pomoReset').onclick = ()=>{
+    clearInterval(timer); timer=null; mode='work'; remain=WORK;
+    $btn.textContent='开始'; drawPomo();
+  };
+
+  // ---------- 近7天回顾 ----------
+  async function renderHistory(){
+    const box = document.getElementById('histRows');
+    if(!box) return;
+    let html='';
+    for(let i=0;i<7;i++){
+      const d = new Date(now); d.setDate(d.getDate()-i);
+      const k = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+      const rec = (i===0) ? day : await sGet('day:'+k);
+      const label = i===0 ? '今天' : (i===1 ? '昨天' : (d.getMonth()+1)+'.'+d.getDate());
+      const wd = '周'+weekdays[d.getDay()];
+      let eatOn=false, moveOn=false, writeOn=false, pomos=0, words=0;
+      if(rec){
+        eatOn  = Object.values(rec.eat||{}).filter(Boolean).length >= 3;
+        moveOn = Object.values(rec.move||{}).some(Boolean);
+        pomos  = rec.pomos||0; words = rec.words||0;
+        writeOn= pomos>0 || words>0;
+      }
+      html += '<div class="hist-row">'+
+        '<span class="hd"><b>'+label+'</b> '+wd+'</span>'+
+        '<span class="dots">'+
+          '<span class="dot eat'+(eatOn?' on':'')+'"></span>'+
+          '<span class="dot move'+(moveOn?' on':'')+'"></span>'+
+          '<span class="dot write'+(writeOn?' on':'')+'"></span>'+
+        '</span>'+
+        '<span class="hs">'+(pomos?('🍅'+pomos+' '):'')+(words?(words+'字'):(rec?'':'无记录'))+'</span>'+
+      '</div>';
+    }
+    box.innerHTML = html;
+  }
+
+  // ---------- toast ----------
+  let toastTimer=null;
+  function toast(msg){
+    const el=document.getElementById('toast');
+    el.textContent=msg; el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+  }
+
+  // ---------- 初始化 ----------
+  (async function init(){
+    const s = await sGet('settings'); if(s) settings=s;
+    const d = await sGet(dayKey); if(d) day=Object.assign(blankDay(),d);
+    const w = await sGet('weights'); if(Array.isArray(w)) weights=w;
+    renderWean();
+    renderMoveHead();
+    renderMenu();
+    renderChecks('eatChecks', EAT_ITEMS, 'eat');
+    renderChecks('moveChecks', MOVE_ITEMS, 'move');
+    renderWater(); renderTri(); renderWeight(); renderPomoCount(); drawPomo();
+    renderWords();
+    renderHistory();
+  })();
+})();
+</script>
+</body>
+</html>
